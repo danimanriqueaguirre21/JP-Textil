@@ -1,0 +1,11 @@
+---
+description: Reglas backend FastAPI
+globs: backend/**/*.py
+---
+
+# FastAPI
+- Usar dependency injection para DB y auth
+- Schemas Pydantic para validación entrada/salida
+- Services para lógica de negocio, no en routers
+- Async/await para operaciones I/O
+- Manejo errores con HTTPException personalizadas

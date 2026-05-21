@@ -1,0 +1,10 @@
+---
+description: Reglas notebooks y modelo Random Forest para predicción de tallas
+globs: ai-models/**/*
+---
+
+# ML (Random Forest)
+- Entrenamiento reproducible desde `ai-models/notebooks/` o `training/`
+- Persistir modelo en `ai-models/serialized/` (nombre versionado)
+- No versionar datos crudos grandes en git; usar `datasets/README.md`
+- Métricas: accuracy, confusion matrix vs talla real cuando exista etiqueta

@@ -1,0 +1,55 @@
+#Contexto de la Organización
+
+## Información General
+
+| Atributo | Detalle |
+|----------|---------|
+| **Razón Social** | JotaPe Textil |
+| **Ubicación** | Huancayo, Junín, Perú |
+| **Sector** | Confección y comercialización textil |
+| **Tipo de Negocio** | Emprendimiento / MYPE |
+| **Canales de Venta** | Redes sociales (TikTok, Facebook, Instagram), WhatsApp, Messenger |
+
+## Descripción del Negocio
+
+JotaPe Textil es un emprendimiento dedicado a la confección y comercialización de prendas personalizadas, operando principalmente a través de canales digitales. La empresa se ha posicionado en el mercado de Huancayo y zonas aledañas ofreciendo productos textiles con opciones de personalización.
+
+## Actividades Principales
+
+| # | Actividad | Descripción | Canal |
+|---|-----------|-------------|-------|
+| 1 | Marketing Digital | Generación de contenido en redes sociales para atraer clientes | TikTok, Facebook, Instagram |
+| 2 | Atención al Cliente | Comunicación personalizada vía mensajería instantánea | WhatsApp, Messenger |
+| 3 | Gestión de Pedidos | Recepción, validación y seguimiento de órdenes de compra | Manual vía chat |
+| 4 | Producción | Corte, confección y personalización de prendas | Taller propio |
+| 5 | Distribución | Envío de productos mediante empresas de transporte | Shalom, Olva, Marvisur |
+| 6 | Postventa | Seguimiento y atención de reclamos/devoluciones | WhatsApp |
+
+## Problemática Identificada
+
+El proceso de asesoramiento de tallas se realiza de manera **manual y subjetiva**, dependiendo exclusivamente de la experiencia del personal de ventas. Esta situación genera:
+
+- Inconsistencias en las recomendaciones
+- Alta tasa de devoluciones y cambios
+- Incremento de costos operativos
+- Baja satisfacción del cliente
+- Retrasos en entregas por reprocesos
+
+## Tecnologías Actuales
+
+| Herramienta | Uso | Limitación |
+|-------------|-----|------------|
+| Redes Sociales | Publicidad y captación | Sin integración con sistemas de venta |
+| WhatsApp/Messenger | Atención y toma de pedidos | Proceso manual, no escalable |
+| Hojas de cálculo | Registro de pedidos | Datos no estructurados, sin validación |
+| Métodos manuales | Recomendación de tallas | Dependiente del criterio subjetivo |
+
+## Oportunidad de Mejora
+
+La implementación de un **sistema inteligente de predicción de tallas** basado en Machine Learning permitirá:
+
+1. Automatizar la recomendación de tallas con precisión > 90%
+2. Estandarizar el proceso de asesoramiento
+3. Reducir la tasa de devoluciones en un 60%
+4. Mejorar la experiencia del cliente
+5. Escalar las operaciones sin incrementar personal

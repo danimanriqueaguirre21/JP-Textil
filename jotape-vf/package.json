@@ -1,0 +1,16 @@
+{
+  "name": "jotape-vf",
+  "private": true,
+  "description": "Monorepo JotaPe Virtual Fitting — scripts delegan a frontend/",
+  "scripts": {
+    "postinstall": "npm install --prefix frontend",
+    "dev": "npm run dev --prefix frontend",
+    "build": "npm run build --prefix frontend",
+    "start": "npm run start --prefix frontend",
+    "lint": "npm run lint --prefix frontend",
+    "test": "npm run test --prefix frontend",
+    "export:tshirt": "node tools/blender/run-export-tshirt.mjs",
+    "export:shorts": "node tools/blender/run-export-shorts.mjs",
+    "export:all-garments": "npm run export:tshirt && npm run export:shorts"
+  }
+}

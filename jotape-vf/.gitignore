@@ -1,0 +1,31 @@
+# Entorno
+.env
+.env.local
+.env.*.local
+backend/.env
+!.env.example
+**/.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+backend/venv/
+backend/.venv/
+
+# Node
+frontend/node_modules/
+frontend/.next/
+frontend/dist/
+
+# Datos
+ai-models/datasets/*.csv
+ai-models/datasets/*.xlsx
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp

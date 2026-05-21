@@ -1,0 +1,6 @@
+# Producción — extiende `docker-compose.yml` o define imágenes publicadas.
+services:
+  api:
+    image: ${API_IMAGE:-jotape-vf-api:latest}
+  web:
+    image: ${WEB_IMAGE:-jotape-vf-web:latest}

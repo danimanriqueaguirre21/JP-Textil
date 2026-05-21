@@ -1,0 +1,10 @@
+---
+description: Reglas globales JotaPe VF
+globs: *
+---
+
+# Proyecto
+- E-commerce con predicción de tallas ML para JotaPe Textil, Huancayo
+- Stack: Next.js 14 + FastAPI + PostgreSQL + Docker + ML
+- Commits: Conventional Commits (feat:, fix:, docs:, test:, refactor:)
+- Idioma código: inglés | Comentarios: español

@@ -1,0 +1,11 @@
+---
+description: Reglas frontend Next.js
+globs: frontend/**/*.tsx, frontend/**/*.ts
+---
+
+# Next.js 14
+- Server Components por defecto
+- 'use client' explícito cuando necesite interactividad
+- API calls centralizadas en services/
+- Tailwind + shadcn/ui para UI
+- React Hook Form + Zod para formularios
