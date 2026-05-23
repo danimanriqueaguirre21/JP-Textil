@@ -1,91 +1,54 @@
 "use client";
 
-import { useFrame, useThree } from "@react-three/fiber";
-import { useCallback, useLayoutEffect, useRef } from "react";
-import { Box3, Group, PerspectiveCamera } from "three";
+import { useThree } from "@react-three/fiber";
+import { useLayoutEffect } from "react";
+import type { Group, PerspectiveCamera } from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 
-import type { ReactNode } from "react";
-
-import { fitCameraToBox } from "@/lib/virtual-fitting/fit-camera-to-box";
+import {
+  computeCanonicalAvatarCameraFrame,
+  FITTING_VIEW,
+} from "@/lib/virtual-fitting/fit-avatar-camera";
 import type { AvatarGender } from "@/types/virtual-fitting";
 
 type Props = {
+  root: Group | null;
   gender: AvatarGender;
-  children: ReactNode;
+  heightScale: number;
 };
 
-const MIN_HEIGHT: Record<AvatarGender, number> = {
-  male: 1.5,
-  female: 1.3,
-};
-
-export function AvatarCameraFit({ gender, children }: Props) {
-  const groupRef = useRef<Group>(null);
-  const { camera, controls, size, invalidate } = useThree();
-  const stableFrames = useRef(0);
-  const lastHeight = useRef(0);
-
-  const fit = useCallback(() => {
-    const group = groupRef.current;
-    const orbit = controls as OrbitControlsImpl | null;
-    if (!group || !orbit) return false;
-
-    const box = new Box3().setFromObject(group);
-    const height = box.max.y - box.min.y;
-    if (height < MIN_HEIGHT[gender]) return false;
-
-    const aspect = size.width > 0 && size.height > 0 ? size.width / size.height : 1;
-    const isMale = gender === "male";
-
-    fitCameraToBox(
-      box,
-      camera as PerspectiveCamera,
-      orbit,
-      aspect,
-      isMale ? 1.52 : 1.46,
-      { bottomPad: isMale ? 0.26 : 0.22, topPad: isMale ? 0.1 : 0.08 },
-    );
-    invalidate();
-    return true;
-  }, [camera, controls, gender, invalidate, size.height, size.width]);
+/** Encuadre fijo probador (misma escala visual hombre/mujer). */
+export function AvatarCameraFit({ root, gender, heightScale }: Props) {
+  const camera = useThree((s) => s.camera);
+  const size = useThree((s) => s.size);
+  const controls = useThree(
+    (s) => s.controls as OrbitControlsImpl | undefined,
+  );
 
   useLayoutEffect(() => {
-    stableFrames.current = 0;
-    lastHeight.current = 0;
-    fit();
-    const t1 = window.setTimeout(fit, 80);
-    const t2 = window.setTimeout(fit, 250);
-    const t3 = window.setTimeout(fit, 600);
-    const t4 = window.setTimeout(fit, 1200);
-    return () => {
-      window.clearTimeout(t1);
-      window.clearTimeout(t2);
-      window.clearTimeout(t3);
-      window.clearTimeout(t4);
-    };
-  }, [fit, gender]);
+    if (!root || !("fov" in camera)) return;
+    const persp = camera as PerspectiveCamera;
+    const aspect = size.width > 0 ? size.width / size.height : 1;
+    const frame = computeCanonicalAvatarCameraFrame(
+      gender,
+      heightScale,
+      persp,
+      aspect,
+    );
 
-  useFrame(() => {
-    const group = groupRef.current;
-    if (!group) return;
+    persp.position.set(0, frame.centerY, frame.distance);
+    persp.lookAt(0, frame.centerY, 0);
+    persp.updateProjectionMatrix();
 
-    const box = new Box3().setFromObject(group);
-    const height = box.max.y - box.min.y;
-    if (height < MIN_HEIGHT[gender]) return;
-
-    if (Math.abs(height - lastHeight.current) > 0.03) {
-      lastHeight.current = height;
-      stableFrames.current = 0;
-      fit();
-      return;
+    if (controls) {
+      controls.target.set(0, frame.centerY, 0);
+      controls.minDistance = frame.distance * 0.88;
+      controls.maxDistance = frame.distance * 1.18;
+      controls.update();
     }
+  }, [root, gender, heightScale, camera, size.width, size.height, controls]);
 
-    if (stableFrames.current < 3) {
-      stableFrames.current += 1;
-      fit();
-    }
-  });
-
-  return <group ref={groupRef}>{children}</group>;
+  return null;
 }
+
+export { FITTING_VIEW };

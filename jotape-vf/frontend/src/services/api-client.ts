@@ -1,7 +1,6 @@
-const BASE =
-  typeof process !== "undefined" && process.env.NEXT_PUBLIC_API_URL
-    ? process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "")
-    : "";
+import { getApiBase } from "@/lib/api-base";
+
+const BASE = getApiBase();
 
 export async function apiClient<T>(
   path: string,

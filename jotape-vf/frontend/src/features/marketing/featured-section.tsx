@@ -7,7 +7,7 @@ import { catalogService } from "@/services/catalog.service";
 export function FeaturedSection() {
   const featured = catalogService.listFeatured();
   return (
-    <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
+    <section className="jp-container py-12 sm:py-16">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-2 jp-animate-fade-up">
           <h2 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">

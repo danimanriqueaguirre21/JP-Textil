@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
 
@@ -10,16 +12,21 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useAuth } from "@/features/account/auth-provider";
 
 export default function AccountDashboardPage() {
+  const { usuario } = useAuth();
+  const nombre =
+    usuario?.nombre_completo?.trim() || usuario?.email?.split("@")[0] || "usuario";
+
   return (
     <div className="space-y-8 jp-animate-fade-up">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-          Hola de nuevo
+          Hola, {nombre}
         </h1>
         <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-          RF-12 Panel de usuario — datos demo hasta conectar JWT con FastAPI.
+          Sesión conectada a FastAPI · {usuario?.email}
         </p>
       </div>
 
@@ -51,8 +58,8 @@ export default function AccountDashboardPage() {
           </CardHeader>
           <CardContent className="space-y-3 pt-0">
             <CardDescription>
-              RF-07 · RF-08 · Visión computacional y talla recomendada — área
-              reservada para integración.
+              Visión computacional y talla recomendada — área reservada para
+              integración.
             </CardDescription>
             <Button asChild size="sm" className="rounded-full">
               <Link href="/account/measurements">
@@ -68,10 +75,11 @@ export default function AccountDashboardPage() {
           </CardHeader>
           <CardContent className="pt-0">
             <CardDescription className="mb-3">
-              Preferencias y datos de envío (RF-02 usuarios).
+              Datos sincronizados desde{" "}
+              <code className="text-xs">GET /users/me</code>.
             </CardDescription>
             <Button asChild variant="ghost" size="sm" className="rounded-full">
-              <Link href="/account/profile">Editar perfil</Link>
+              <Link href="/account/profile">Ver perfil</Link>
             </Button>
           </CardContent>
         </Card>

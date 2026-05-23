@@ -1,10 +1,14 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { AccountProfileFields } from "@/features/account";
+import { useAuth } from "@/features/account/auth-provider";
 
 export default function AccountProfilePage() {
+  const { usuario } = useAuth();
+
+  if (!usuario) return null;
+
   return (
     <div className="jp-animate-fade-up space-y-6">
       <div>
@@ -12,7 +16,8 @@ export default function AccountProfilePage() {
           Perfil
         </h1>
         <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-          Datos locales demo — sincroniza con el módulo de usuarios (FastAPI).
+          Información de tu cuenta desde el backend. La edición llegará en una
+          próxima versión.
         </p>
       </div>
       <Card>
@@ -20,26 +25,7 @@ export default function AccountProfilePage() {
           <CardTitle className="text-base">Datos personales</CardTitle>
         </CardHeader>
         <CardContent>
-          <form
-            className="grid max-w-md gap-4"
-            onSubmit={(e) => e.preventDefault()}
-          >
-            <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                Nombre
-              </label>
-              <Input placeholder="Tu nombre" />
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                Correo
-              </label>
-              <Input type="email" placeholder="correo@ejemplo.com" />
-            </div>
-            <Button type="submit" className="mt-2 w-fit rounded-full">
-              Guardar (demo)
-            </Button>
-          </form>
+          <AccountProfileFields usuario={usuario} />
         </CardContent>
       </Card>
     </div>

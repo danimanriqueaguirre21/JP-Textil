@@ -7,19 +7,10 @@ type Props = {
   gender: AvatarGender;
   heightScale?: number;
   garmentScale?: number;
+  showGarment?: boolean;
 };
 
-/** Avatar 3D — debe renderizarse dentro de &lt;Canvas&gt; (p. ej. FittingScene). */
-export function AvatarView({
-  gender,
-  heightScale = 1,
-  garmentScale = 1,
-}: Props) {
-  return (
-    <GltfAvatar
-      gender={gender}
-      heightScale={heightScale}
-      garmentScale={garmentScale}
-    />
-  );
+/** Probador: avatar GLB + tshirt.glb + shorts.glb (ver GltfAvatar). */
+export function AvatarView(props: Props) {
+  return <GltfAvatar {...props} />;
 }

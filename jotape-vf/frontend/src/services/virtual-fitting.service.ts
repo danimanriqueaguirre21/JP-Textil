@@ -6,18 +6,16 @@ export type PredictionApiResponse = {
   model_version: string;
 };
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? "http://localhost:8000";
-
-/** Refuerza recomendación con el endpoint ML del backend (opcional). */
+/** Predicción ML vía BFF Next.js → FastAPI (mismo origen, sin CORS al backend). */
 export async function fetchSizePrediction(input: {
   height_cm: number;
   weight_kg: number;
   fit: Fit;
 }): Promise<PredictionApiResponse | null> {
   try {
-    const res = await fetch(`${API_BASE}/api/v1/predictions/`, {
+    const res = await fetch("/api/predictions", {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(input),
     });

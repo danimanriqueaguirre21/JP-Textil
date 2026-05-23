@@ -1,7 +1,7 @@
 import pytest
 from sqlalchemy import select, update
 
-from src.modules.users.infrastructure.models import UserModel
+from src.shared.db.modelos import Usuario
 
 pytestmark = pytest.mark.postgres
 
@@ -11,8 +11,8 @@ def test_register_and_login(api_client_db, db_session) -> None:
         "/auth/register",
         json={
             "email": "buyer@example.com",
-            "password": "strong-password-1",
-            "full_name": "Buyer",
+            "contrasena": "strong-password-1",
+            "nombre_completo": "Buyer",
         },
     )
     assert reg.status_code == 200
@@ -20,7 +20,7 @@ def test_register_and_login(api_client_db, db_session) -> None:
 
     login = api_client_db.post(
         "/auth/login",
-        json={"email": "buyer@example.com", "password": "strong-password-1"},
+        json={"email": "buyer@example.com", "contrasena": "strong-password-1"},
     )
     assert login.status_code == 200
     token = login.json()["access_token"]
@@ -37,8 +37,8 @@ def test_register_and_login(api_client_db, db_session) -> None:
 def test_register_conflict(api_client_db) -> None:
     payload = {
         "email": "dup@example.com",
-        "password": "strong-password-1",
-        "full_name": "A",
+        "contrasena": "strong-password-1",
+        "nombre_completo": "A",
     }
     assert api_client_db.post("/auth/register", json=payload).status_code == 200
     dup = api_client_db.post("/auth/register", json=payload)
@@ -48,7 +48,7 @@ def test_register_conflict(api_client_db) -> None:
 def test_login_unknown_user(api_client_db) -> None:
     res = api_client_db.post(
         "/auth/login",
-        json={"email": "ghost@example.com", "password": "x"},
+        json={"email": "ghost@example.com", "contrasena": "x"},
     )
     assert res.status_code == 401
 
@@ -58,13 +58,13 @@ def test_login_wrong_password(api_client_db) -> None:
         "/auth/register",
         json={
             "email": "seller@example.com",
-            "password": "correct-horse",
-            "full_name": "Seller",
+            "contrasena": "correct-horse",
+            "nombre_completo": "Seller",
         },
     )
     res = api_client_db.post(
         "/auth/login",
-        json={"email": "seller@example.com", "password": "wrong"},
+        json={"email": "seller@example.com", "contrasena": "wrong"},
     )
     assert res.status_code == 401
 
@@ -74,18 +74,18 @@ def test_login_disabled_user(api_client_db, db_session) -> None:
         "/auth/register",
         json={
             "email": "inactive@example.com",
-            "password": "strong-password-1",
-            "full_name": "Inactive",
+            "contrasena": "strong-password-1",
+            "nombre_completo": "Inactive",
         },
     )
     user = db_session.execute(
-        select(UserModel).where(UserModel.email == "inactive@example.com")
+        select(Usuario).where(Usuario.email == "inactive@example.com")
     ).scalar_one()
-    db_session.execute(update(UserModel).where(UserModel.id == user.id).values(is_active=False))
+    db_session.execute(update(Usuario).where(Usuario.id == user.id).values(activo=False))
     db_session.commit()
 
     res = api_client_db.post(
         "/auth/login",
-        json={"email": "inactive@example.com", "password": "strong-password-1"},
+        json={"email": "inactive@example.com", "contrasena": "strong-password-1"},
     )
     assert res.status_code == 401

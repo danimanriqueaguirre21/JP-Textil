@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 
 import pytest
-from sqlalchemy import delete, text
+from sqlalchemy import text
 from sqlalchemy.orm import sessionmaker
 
 
@@ -20,6 +20,7 @@ def pytest_configure() -> None:
         "JWT_SECRET_KEY": "test-secret-key",
         "JWT_ALGORITHM": "HS256",
         "JWT_ACCESS_TOKEN_EXPIRES_MINUTES": "60",
+        "RATE_LIMIT_ENABLED": "false",
     }
     for key, value in defaults.items():
         os.environ.setdefault(key, value)
@@ -39,7 +40,9 @@ def api_client():
 def db_engine():
     """Motor PostgreSQL; se omite la suite que lo requiere si no hay servidor."""
     from src.shared.db.base import Base
+    from src.shared.db import modelos  # noqa: F401
     from src.shared.db.engine import engine
+    from src.shared.db.semillas import asegurar_roles
 
     try:
         with engine.connect() as conn:
@@ -49,7 +52,11 @@ def db_engine():
     except Exception as exc:  # noqa: BLE001 — diagnóstico de conexión en CI/local
         pytest.skip(f"PostgreSQL no disponible: {exc}")
 
+    Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
+    Session = sessionmaker(bind=engine)
+    with Session() as session:
+        asegurar_roles(session)
     yield engine
     Base.metadata.drop_all(bind=engine)
     engine.dispose()
@@ -65,16 +72,18 @@ def db_session(db_engine):
 @pytest.fixture
 def api_client_db(db_engine):
     """Cliente HTTP con esquema creado en la sesión de tests."""
+    from sqlalchemy import delete
+
     from starlette.testclient import TestClient
 
     from src.main import app
-    from src.modules.users.infrastructure.models import UserModel
+    from src.shared.db.modelos import Usuario
 
     Session = sessionmaker(bind=db_engine)
 
     def wipe() -> None:
         with Session() as session:
-            session.execute(delete(UserModel))
+            session.execute(delete(Usuario))
             session.commit()
 
     wipe()

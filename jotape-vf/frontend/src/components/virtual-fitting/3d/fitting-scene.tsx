@@ -1,14 +1,13 @@
 "use client";
 
-import { OrbitControls, Html } from "@react-three/drei";
-import { Canvas, useThree } from "@react-three/fiber";
-import { useLayoutEffect, useState } from "react";
-import { Color } from "three";
+import { Html, OrbitControls } from "@react-three/drei";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Suspense, useLayoutEffect, useRef, type ReactNode } from "react";
+import type { Group } from "three";
 
 import { AvatarView } from "@/components/virtual-fitting/3d/avatar-view";
+import { FITTING_VIEW } from "@/components/virtual-fitting/3d/avatar-camera-fit";
 import { FittingLights } from "@/components/virtual-fitting/3d/gltf-avatar";
-import PoloShirt from "@/components/virtual-fitting/3d/polo-shirt";
-import Shorts from "@/components/virtual-fitting/3d/shorts";
 import type { Size } from "@/lib/sizing/recommender";
 import {
   garmentScaleForSize,
@@ -16,56 +15,77 @@ import {
 } from "@/lib/virtual-fitting/size-3d";
 import type { AvatarGender } from "@/types/virtual-fitting";
 
-const BACKGROUND = 0xeeeeee;
-const FLOOR_COLOR = 0xcccccc;
-
 function SceneRendererSetup() {
   const { gl, scene } = useThree();
+
   useLayoutEffect(() => {
-    scene.background = new Color(BACKGROUND);
+    scene.background = null;
     scene.fog = null;
+    gl.setClearColor(0x000000, 0);
     gl.setPixelRatio(
       typeof window !== "undefined" ? window.devicePixelRatio : 1,
     );
   }, [gl, scene]);
+
   return null;
 }
 
-function FittingFloor() {
+/** Respiración idle muy sutil. */
+function AvatarIdleWrapper({ children }: { children: ReactNode }) {
+  const ref = useRef<Group>(null);
+
+  useFrame((state) => {
+    if (!ref.current) return;
+    const t = state.clock.elapsedTime;
+    ref.current.position.y = Math.sin(t * 0.9) * 0.012;
+    const breath = 1 + Math.sin(t * 1.1) * 0.005;
+    ref.current.scale.setScalar(breath);
+  });
+
+  return <group ref={ref}>{children}</group>;
+}
+
+function FittingPlatform() {
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
-      <planeGeometry args={[14, 14]} />
-      <meshStandardMaterial
-        color={FLOOR_COLOR}
-        roughness={0.92}
-        metalness={0}
-      />
-    </mesh>
+    <group position={[0, 0.01, 0]}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[1.35, 64]} />
+        <meshStandardMaterial
+          color="#f4f4f5"
+          roughness={0.35}
+          metalness={0.08}
+          emissive="#ffffff"
+          emissiveIntensity={0.12}
+        />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.002, 0]}>
+        <ringGeometry args={[1.35, 1.55, 64]} />
+        <meshStandardMaterial
+          color="#e9d5ff"
+          transparent
+          opacity={0.35}
+          roughness={0.9}
+        />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.004, 0]}>
+        <circleGeometry args={[2.2, 64]} />
+        <meshStandardMaterial
+          color="#ddd6fe"
+          transparent
+          opacity={0.08}
+          roughness={1}
+        />
+      </mesh>
+    </group>
   );
 }
 
-// Botón flotante para probar
-function OutfitToggle({ onToggle, visible }: { onToggle: () => void; visible: boolean }) {
+function AvatarLoading() {
   return (
-    <Html position={[0, 2.2, 0]} center>
-      <button
-        onClick={onToggle}
-        style={{
-          padding: '10px 24px',
-          background: visible ? '#1a1a1a' : '#fff',
-          color: visible ? '#fff' : '#1a1a1a',
-          border: '2px solid #1a1a1a',
-          borderRadius: 4,
-          cursor: 'pointer',
-          fontSize: 13,
-          fontWeight: 600,
-          textTransform: 'uppercase',
-          letterSpacing: 1,
-          whiteSpace: 'nowrap'
-        }}
-      >
-        {visible ? 'Quitar Ropa' : 'Vestir'}
-      </button>
+    <Html center>
+      <p className="rounded-2xl border border-white/60 bg-white/90 px-4 py-2 text-sm text-zinc-600 shadow-lg backdrop-blur">
+        Cargando avatar 3D…
+      </p>
     </Html>
   );
 }
@@ -83,58 +103,50 @@ export function FittingScene({
   heightCm = 170,
   className,
 }: Props) {
-  const [outfitVisible, setOutfitVisible] = useState(false);
   const heightScale = mannequinScaleForHeight(heightCm);
   const garmentScale = garmentScaleForSize(size);
 
   return (
-    <div className={className ?? "h-full w-full"} style={{ position: 'relative' }}>
+    <div
+      className={
+        className ??
+        "h-full w-full bg-gradient-to-br from-violet-100/90 via-slate-100 to-sky-100/80 dark:from-violet-950/40 dark:via-zinc-900 dark:to-sky-950/30"
+      }
+    >
       <Canvas
-        shadows
-        camera={{ fov: 28, position: [0, 1.35, 3.1], near: 0.1, far: 50 }}
-        gl={{ antialias: true, alpha: false }}
+        camera={{ fov: FITTING_VIEW.fov, position: [0, 0.93, 4.1], near: 0.1, far: 50 }}
+        gl={{ antialias: true, alpha: true }}
         onCreated={({ gl, scene }) => {
-          scene.background = new Color(BACKGROUND);
+          scene.background = null;
           scene.fog = null;
+          gl.setClearColor(0x000000, 0);
           if (typeof window !== "undefined") {
-            gl.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+            gl.setPixelRatio(window.devicePixelRatio);
           }
         }}
       >
         <SceneRendererSetup />
         <FittingLights />
-        
-        {/* Maniquí con su escala */}
-        <group scale={heightScale}>
-          <AvatarView
-            gender={gender}
-            heightScale={1} // ya aplicado en el group padre
-            garmentScale={garmentScale}
-          />
-          
-          {/* ROPA - posición y escala ajustadas */}
-          <group 
-            scale={garmentScale} 
-            position={[0, 0, 0]}
-          >
-            <PoloShirt visible={outfitVisible} />
-            <Shorts visible={outfitVisible} />
-          </group>
-        </group>
-
-        <FittingFloor />
-        
+        <pointLight position={[0, 2.2, 1.5]} intensity={0.25} color="#c4b5fd" />
+        <pointLight position={[-2, 1.5, 2]} intensity={0.15} color="#93c5fd" />
+        <Suspense fallback={<AvatarLoading />}>
+          <AvatarIdleWrapper>
+            <AvatarView
+              gender={gender}
+              heightScale={heightScale}
+              garmentScale={garmentScale}
+            />
+          </AvatarIdleWrapper>
+        </Suspense>
+        <FittingPlatform />
         <OrbitControls
           enablePan={false}
-          minDistance={2}
-          maxDistance={5}
-          target={[0, 0.95, 0]}
+          minDistance={3.5}
+          maxDistance={5.2}
+          target={[0, 0.93, 0]}
           maxPolarAngle={Math.PI / 2 + 0.15}
-        />
-
-        <OutfitToggle 
-          visible={outfitVisible} 
-          onToggle={() => setOutfitVisible(!outfitVisible)} 
+          autoRotate
+          autoRotateSpeed={0.35}
         />
       </Canvas>
     </div>

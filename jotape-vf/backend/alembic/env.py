@@ -6,8 +6,8 @@ from sqlalchemy import engine_from_config, pool
 from src.core.config import settings
 from src.shared.db.base import Base
 
-# Import models for metadata
-from src.modules.users.infrastructure.models import UserModel  # noqa: F401
+# Importar todos los modelos para registrar metadata
+from src.shared.db import modelos  # noqa: F401
 
 config = context.config
 
@@ -59,4 +59,3 @@ if context.is_offline_mode():
     run_migrations_offline()
 else:
     run_migrations_online()
-

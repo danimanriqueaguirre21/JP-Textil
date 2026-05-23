@@ -97,6 +97,46 @@ export type BodyRegionSlice = {
   size: Vector3;
 };
 
+export type BodyRegionYRange = {
+  yMin: number;
+  yMax: number;
+  centerX: number;
+  centerZ: number;
+};
+
+/** Límites verticales de la región (p. ej. hombros o cintura) en espacio local del body mesh. */
+export function getBodyRegionYRange(
+  geometry: BufferGeometry,
+  region: {
+    yMinRatio: number;
+    yMaxRatio: number;
+    yMaxCapRatio?: number;
+  },
+): BodyRegionYRange {
+  const pos = geometry.getAttribute("position") as BufferAttribute;
+  const full = new Box3();
+  const v = new Vector3();
+
+  for (let i = 0; i < pos.count; i++) {
+    v.fromBufferAttribute(pos, i);
+    full.expandByPoint(v);
+  }
+
+  const bodyH = full.max.y - full.min.y;
+  const yMin = full.min.y + bodyH * region.yMinRatio;
+  let yMax = full.min.y + bodyH * region.yMaxRatio;
+  if (region.yMaxCapRatio != null) {
+    yMax = Math.min(yMax, full.min.y + bodyH * region.yMaxCapRatio);
+  }
+
+  return {
+    yMin,
+    yMax,
+    centerX: (full.min.x + full.max.x) * 0.5,
+    centerZ: (full.min.z + full.max.z) * 0.5,
+  };
+}
+
 /**
  * Mide torso/cadera sin contar brazos en T-pose (solo vértices cerca del eje central).
  */

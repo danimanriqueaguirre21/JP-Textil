@@ -9,8 +9,14 @@ import {
 
 const GARMENT_NODE = /vf-garment|tshirt|shorts/i;
 
+export type RefineAvatarOptions = {
+  /** 1 = suave sin inflar mucho el cuerpo (mejor con ropa GLB). 2 = más detalle. */
+  levels?: number;
+};
+
 /** Refina geometría del GLB: más polígonos + normales suaves (flatShading siempre off). */
-export function refineAvatarRoot(root: Group): void {
+export function refineAvatarRoot(root: Group, options: RefineAvatarOptions = {}): void {
+  const maxLevels = Math.max(1, Math.min(2, options.levels ?? 2));
   root.traverse((node) => {
     if (!(node instanceof Mesh)) return;
     const name = (node.name || "").toLowerCase();
@@ -36,7 +42,7 @@ export function refineAvatarRoot(root: Group): void {
     }
 
     const tris = countGeometryTriangles(node.geometry);
-    const levels = tris < 6_000 ? 2 : 1;
+    const levels = tris < 6_000 ? maxLevels : Math.min(1, maxLevels);
     const refined = subdivideBufferGeometry(node.geometry, {
       levels,
       maxTriangles: 100_000,

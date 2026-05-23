@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 
 export function NewsletterSection() {
   return (
-    <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
+    <section className="jp-container py-12 sm:py-16">
       <div className="jp-animate-fade-up rounded-3xl border border-zinc-200 bg-zinc-50 p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/30 sm:p-10">
         <div className="grid gap-8 md:grid-cols-2 md:items-center">
           <div className="space-y-2">

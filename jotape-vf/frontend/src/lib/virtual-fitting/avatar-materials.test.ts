@@ -10,8 +10,9 @@ describe("avatar-materials", () => {
     expect(createSkinMaterial().roughness).toBeLessThan(0.5);
     expect(createHairMaterial().roughness).toBeGreaterThan(0.7);
     const fabric = createFabricMaterial("#3f3f46");
-    expect(fabric.roughness).toBe(0.85);
-    expect(fabric.metalness).toBe(0);
+    expect(fabric.roughness).toBe(0.82);
+    expect(fabric.metalness).toBe(0.02);
+    expect(fabric.normalMap).toBeDefined();
     expect(fabric.wireframe).toBe(false);
   });
 

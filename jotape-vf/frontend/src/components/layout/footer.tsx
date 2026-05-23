@@ -31,7 +31,7 @@ const FOOTER_LINKS = [
 export function Footer() {
   return (
     <footer className="border-t border-zinc-200 bg-white dark:border-zinc-800 dark:bg-black">
-      <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
+      <div className="jp-container py-14">
         <div className="grid gap-10 md:grid-cols-2">
           <div className="space-y-4 jp-animate-fade-up">
             <div className="text-xs font-semibold tracking-[0.22em] uppercase text-zinc-900 dark:text-zinc-50">

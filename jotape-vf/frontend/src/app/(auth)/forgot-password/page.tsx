@@ -35,7 +35,7 @@ export default function ForgotPasswordPage() {
               e.preventDefault();
               const fd = new FormData(e.currentTarget);
               const email = String(fd.get("email") ?? "");
-              await authService.requestPasswordReset(email);
+              await authService.solicitarRestablecimientoContrasena(email);
               setSent(true);
             }}
           >

@@ -11,6 +11,11 @@
     "test": "npm run test --prefix frontend",
     "export:tshirt": "node tools/blender/run-export-tshirt.mjs",
     "export:shorts": "node tools/blender/run-export-shorts.mjs",
-    "export:all-garments": "npm run export:tshirt && npm run export:shorts"
+    "export:all-garments": "npm run export:clothing:mesh",
+    "export:clothing:mesh": "node tools/node/export-clothing-from-avatar.mjs",
+    "export:tshirt:preview": "node tools/node/export-tshirt-preview.mjs",
+    "blender:tshirt": "echo Run in Blender Scripting: tools/blender/create_realistic_tshirt.py",
+    "export:clothing:blender": "npm run export:tshirt && npm run export:shorts",
+    "export:cc-avatar": "echo Blender: tools/blender/export_cc_avatar_glb.py (hombre) o -- --female"
   }
 }

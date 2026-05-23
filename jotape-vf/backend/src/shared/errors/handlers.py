@@ -2,6 +2,8 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 
+from src.core.config import settings
+
 from .exceptions import AppError
 
 
@@ -20,12 +22,13 @@ async def app_error_handler(_: Request, exc: AppError):
 
 
 async def request_validation_error_handler(_: Request, exc: RequestValidationError):
+    details = exc.errors() if settings.DEBUG else None
     return JSONResponse(
         status_code=422,
         content=_error_payload(
             "validation_error",
             "Invalid request",
-            details=exc.errors(),
+            details=details,
         ),
     )
 

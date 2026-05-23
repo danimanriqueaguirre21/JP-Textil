@@ -1,5 +1,5 @@
 """
-Exporta camiseta 3D como una sola pieza (sin huecos entre torso y mangas).
+Exporta camiseta 3D (torso + mangas + cuello) como una sola malla GLB.
 Uso: blender --background --python tools/blender/export_tshirt_glb.py
 """
 import os
@@ -16,14 +16,21 @@ from _garment_common import (
     clear_scene,
     create_fabric_material,
     finalize_and_export,
+    join_objects,
     project_garments_dir,
 )
 
 clear_scene()
 
-# Una sola malla: ancho incluye mangas, alto = torso+cuello
-tshirt = add_box((0.72, 0.26, 0.58), (0.0, 0.0, 0.0), name="tshirt")
+# Blender Z = alto. scale = (ancho X, profundidad Y, alto Z)
+torso = add_box((0.42, 0.22, 0.5), (0.0, 0.0, 0.02), name="torso")
+sleeve_l = add_box((0.18, 0.14, 0.14), (-0.34, 0.0, 0.22), name="sleeve_l")
+sleeve_r = add_box((0.18, 0.14, 0.14), (0.34, 0.0, 0.22), name="sleeve_r")
+collar = add_box((0.2, 0.1, 0.06), (0.0, 0.0, 0.3), name="collar")
 
-fabric = create_fabric_material("tshirt_fabric", (0.95, 0.95, 0.95), roughness=0.9)
+tshirt = join_objects([torso, sleeve_l, sleeve_r, collar])
+tshirt.name = "tshirt"
+
+fabric = create_fabric_material("tshirt_fabric", (0.95, 0.95, 0.95), roughness=0.88)
 output_path = project_garments_dir("tshirt.glb")
 finalize_and_export(tshirt, fabric, output_path)

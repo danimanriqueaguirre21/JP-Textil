@@ -1,6 +1,11 @@
 import Link from "next/link";
 
-import { AccountMobileNav, AccountSidebar } from "@/features/account";
+import {
+  AccountGuard,
+  AccountMobileNav,
+  AccountSidebar,
+} from "@/features/account";
+import { AuthProvider } from "@/features/account/auth-provider";
 
 export default function AccountLayout({
   children,
@@ -24,13 +29,17 @@ export default function AccountLayout({
         </div>
       </header>
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
-        <AccountMobileNav />
-        <div className="flex gap-10 lg:gap-14">
-          <aside className="hidden w-52 shrink-0 md:block lg:w-56">
-            <AccountSidebar />
-          </aside>
-          <div className="min-w-0 flex-1">{children}</div>
-        </div>
+        <AuthProvider>
+          <AccountMobileNav />
+          <div className="flex gap-10 lg:gap-14">
+            <aside className="hidden w-52 shrink-0 md:block lg:w-56">
+              <AccountSidebar />
+            </aside>
+            <div className="min-w-0 flex-1">
+              <AccountGuard>{children}</AccountGuard>
+            </div>
+          </div>
+        </AuthProvider>
       </div>
     </div>
   );

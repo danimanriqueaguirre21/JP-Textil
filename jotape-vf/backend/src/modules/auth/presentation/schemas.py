@@ -1,12 +1,16 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 
-class TokenResponse(BaseModel):
+class InicioSesionSolicitud(BaseModel):
+    email: EmailStr
+    contrasena: str
+
+
+class TokenRespuesta(BaseModel):
     access_token: str
     token_type: str = "bearer"
 
 
-class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
-
+# Alias retrocompatible para imports existentes en tests
+LoginRequest = InicioSesionSolicitud
+TokenResponse = TokenRespuesta

@@ -158,12 +158,15 @@ export function createHairMaterial(): MeshPhysicalMaterial {
 
 
 
-/** Tela — MeshStandardMaterial sólido (sin normal map en prenda). */
+/** Tela — MeshStandardMaterial con micro-normal procedural (hasta textura GLB). */
 export function createFabricMaterial(color: string): MeshStandardMaterial {
   const mat = new MeshStandardMaterial({
     color,
-    roughness: 0.85,
-    metalness: 0,
+    roughness: 0.82,
+    metalness: 0.02,
+    normalMap: getFabricNormalMap(),
+    normalScale: FABRIC_NORMAL,
+    envMapIntensity: 0.85,
     flatShading: false,
     wireframe: false,
     side: DoubleSide,

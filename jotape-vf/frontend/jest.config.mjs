@@ -22,7 +22,6 @@ const customConfig = {
     "!src/lib/sizing/recommender.ts",
     "!src/lib/virtual-fitting/garment-renderer.ts",
     "!src/lib/virtual-fitting/avatar-mesh-utils.ts",
-    "!src/lib/virtual-fitting/garment-glb.ts",
     "!src/services/api-client.ts",
     "!src/services/auth.service.ts",
     "!src/services/virtual-fitting.service.ts",

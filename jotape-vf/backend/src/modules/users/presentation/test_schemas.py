@@ -1,14 +1,14 @@
 import pytest
 from pydantic import ValidationError
 
-from src.modules.users.presentation.schemas import UserCreate
+from src.modules.users.presentation.schemas import UsuarioCrear
 
 
-def test_user_create_accepts_optional_name() -> None:
-    u = UserCreate(email="a@example.com", password="secret123")
-    assert u.full_name is None
+def test_usuario_crear_acepta_nombre_opcional() -> None:
+    u = UsuarioCrear(email="a@example.com", contrasena="secret123")
+    assert u.nombre_completo is None
 
 
-def test_user_create_validates_email() -> None:
+def test_usuario_crear_valida_email() -> None:
     with pytest.raises(ValidationError):
-        UserCreate(email="bad", password="x")
+        UsuarioCrear(email="bad", contrasena="x")

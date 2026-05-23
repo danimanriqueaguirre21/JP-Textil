@@ -9,8 +9,6 @@ export function isAvatarClothingMesh(name: string): boolean {
 }
 
 export function applyBodyMaterial(mesh: Mesh, material: Mesh["material"]): void {
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
   mesh.material = material;
 }
 

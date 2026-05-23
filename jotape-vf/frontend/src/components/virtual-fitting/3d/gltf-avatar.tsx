@@ -2,33 +2,21 @@
 
 import { useGLTF } from "@react-three/drei";
 import type { ThreeElements } from "@react-three/fiber";
-import { useEffect, useMemo } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { Group, Material, Mesh, MeshStandardMaterial } from "three";
 
-import { AVATAR_MODEL_URL } from "@/lib/virtual-fitting/avatar-models";
-import { normalizeAvatarGroup } from "@/lib/virtual-fitting/avatar-normalize";
+import { AvatarCameraFit } from "@/components/virtual-fitting/3d/avatar-camera-fit";
+
 import {
-  applySolidMaterialFlags,
-  createHairMaterial,
-  createSkinMaterial,
-} from "@/lib/virtual-fitting/avatar-materials";
+  AVATAR_GLB_PATHS,
+  buildOutfitRig,
+} from "@/lib/clothing/build-outfit-rig";
 import {
-  applyBodyMaterial,
-  isAvatarClothingMesh,
-} from "@/lib/virtual-fitting/avatar-mesh-utils";
-import { findMainBodyMesh } from "@/lib/virtual-fitting/body-mesh";
-import {
-  GARMENT_SHORTS_ROOT,
-  GARMENT_TSHIRT_ROOT,
-  enforceGarmentSolidMaterials,
-  mergeDefaultOutfit,
-  removeAllGarmentsFromAvatar,
-} from "@/lib/virtual-fitting/garment-glb";
-import {
-  DEFAULT_OUTFIT_COLORS,
-  garmentFitProfile,
-} from "@/lib/virtual-fitting/garment-models";
-import { refineAvatarRoot } from "@/lib/virtual-fitting/refine-avatar-mesh";
+  ALL_CLOTHING_GLBS,
+  getClothingGlbUrl,
+} from "@/lib/clothing/clothing-paths";
+import { applySolidMaterialFlags } from "@/lib/virtual-fitting/avatar-materials";
+import { disposeObject3D } from "@/lib/virtual-fitting/dispose-object3d";
 import type { AvatarGender } from "@/types/virtual-fitting";
 
 type GroupProps = ThreeElements["group"];
@@ -63,51 +51,21 @@ function disableWireframeOnMaterials(root: Group): void {
   });
 }
 
-function prepareAvatarMeshes(root: Group): void {
-  root.traverse((node) => {
-    if (!(node instanceof Mesh)) return;
-    const name = (node.name || "").toLowerCase();
-    if (name.includes("eye")) {
-      node.visible = false;
-      return;
-    }
-    if (isAvatarClothingMesh(name)) {
-      node.visible = false;
-      return;
-    }
-    if (
-      node.parent?.name === GARMENT_TSHIRT_ROOT ||
-      node.parent?.name === GARMENT_SHORTS_ROOT ||
-      /vf-garment/.test(name)
-    ) {
-      return;
-    }
-    if (name.includes("hair")) {
-      applyBodyMaterial(node, createHairMaterial());
-      return;
-    }
-    applyBodyMaterial(node, createSkinMaterial());
-  });
-}
-
 export function FittingLights() {
   return (
     <>
-      <ambientLight intensity={2} />
-      <hemisphereLight args={["#ffffff", "#aaaaaa", 1]} />
-      <directionalLight
-        position={[0, 3, 3]}
-        intensity={2.5}
-        castShadow
-        shadow-mapSize-width={2048}
-        shadow-mapSize-height={2048}
-      />
-      <directionalLight position={[0, 2, -2]} intensity={1} />
+      <ambientLight intensity={0.55} />
+      <hemisphereLight args={["#ffffff", "#b8b8b8", 0.65]} />
+      <directionalLight position={[2.5, 4, 3]} intensity={1.6} />
+      <directionalLight position={[-2.2, 2.8, 2]} intensity={0.5} />
+      <directionalLight position={[0, 1.2, -3]} intensity={0.35} />
     </>
   );
 }
 
-/** Avatar GLB + outfit placeholder (cápsula/caja redondeada). GLB de tela: futuro. */
+/**
+ * Avatar GLB + ropa GLB del mismo género (male/female).
+ */
 export function GltfAvatar({
   gender,
   heightScale = 1,
@@ -116,48 +74,74 @@ export function GltfAvatar({
   onReady,
   ...props
 }: Props) {
-  const { scene } = useGLTF(AVATAR_MODEL_URL[gender]);
+  const rigRef = useRef<Group>(null);
+  const bodyMeshRef = useRef<Mesh | null>(null);
+  const mountedRef = useRef<Group | null>(null);
+  const [cameraTarget, setCameraTarget] = useState<Group | null>(null);
+  const onReadyRef = useRef(onReady);
+  onReadyRef.current = onReady;
 
-  const profile = garmentFitProfile(gender, garmentScale);
-  const shouldShowGarment = showGarment !== false;
+  const avatar = useGLTF(AVATAR_GLB_PATHS[gender]);
+  const tshirt = useGLTF(getClothingGlbUrl(gender, "tshirt"));
+  const shorts = useGLTF(getClothingGlbUrl(gender, "shorts"));
 
-  const { model, bodyMesh } = useMemo(() => {
-    const clone = scene.clone(true);
-    prepareAvatarMeshes(clone);
+  useLayoutEffect(() => {
+    const wrapper = rigRef.current;
+    if (!wrapper) return;
 
-    const body = findMainBodyMesh(clone);
+    const avatarScene = avatar.scene;
+    if (!avatarScene?.traverse) return;
 
-    refineAvatarRoot(clone);
-
-    if (shouldShowGarment && body) {
-      mergeDefaultOutfit(clone, body, { profile, gender });
-    } else {
-      removeAllGarmentsFromAvatar(clone);
+    if (mountedRef.current) {
+      wrapper.remove(mountedRef.current);
+      disposeObject3D(mountedRef.current);
+      mountedRef.current = null;
     }
 
-    const tshirtRoot = clone.getObjectByName(GARMENT_TSHIRT_ROOT);
-    const shortsRoot = clone.getObjectByName(GARMENT_SHORTS_ROOT);
-    if (tshirtRoot) {
-      enforceGarmentSolidMaterials(tshirtRoot, DEFAULT_OUTFIT_COLORS.tshirt);
-    }
-    if (shortsRoot) {
-      enforceGarmentSolidMaterials(shortsRoot, DEFAULT_OUTFIT_COLORS.shorts);
-    }
+    const { rig, bodyMesh } = buildOutfitRig({
+      gender,
+      avatarScene,
+      tshirtGltf: tshirt,
+      shortsGltf: shorts,
+      heightScale,
+      garmentScale,
+      showGarment,
+      avatarAnimations: avatar.animations,
+    });
 
-    normalizeAvatarGroup(clone, body, gender, heightScale);
-    disableWireframeOnMaterials(clone);
+    disableWireframeOnMaterials(rig);
+    wrapper.add(rig);
+    mountedRef.current = rig;
+    bodyMeshRef.current = bodyMesh;
+    rig.updateMatrixWorld(true);
+    setCameraTarget(rig);
 
-    clone.updateMatrixWorld(true);
+    onReadyRef.current?.({ model: wrapper, bodyMesh: bodyMeshRef.current });
 
-    return { model: clone, bodyMesh: body };
-  }, [scene, gender, heightScale, garmentScale, shouldShowGarment, profile]);
+    return () => {
+      if (mountedRef.current && wrapper) {
+        wrapper.remove(mountedRef.current);
+        disposeObject3D(mountedRef.current);
+        mountedRef.current = null;
+      }
+      setCameraTarget(null);
+    };
+  }, [avatar, tshirt, shorts, gender, heightScale, garmentScale, showGarment]);
 
-  useEffect(() => {
-    onReady?.({ model, bodyMesh });
-  }, [model, bodyMesh, onReady]);
-
-  return <primitive object={model} castShadow receiveShadow {...props} />;
+  return (
+    <>
+      <AvatarCameraFit
+        root={cameraTarget}
+        gender={gender}
+        heightScale={heightScale}
+      />
+      <group ref={rigRef} {...props} />
+    </>
+  );
 }
 
-useGLTF.preload(AVATAR_MODEL_URL.male);
-useGLTF.preload(AVATAR_MODEL_URL.female);
+useGLTF.preload(AVATAR_GLB_PATHS.male);
+useGLTF.preload(AVATAR_GLB_PATHS.female);
+for (const url of ALL_CLOTHING_GLBS) {
+  useGLTF.preload(url);
+}

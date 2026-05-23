@@ -4,11 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
+  LogOut,
   Package,
   Ruler,
   User,
 } from "lucide-react";
 
+import { useAuth } from "@/features/account/auth-provider";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const LINKS = [
@@ -20,6 +23,7 @@ const LINKS = [
 
 export function AccountSidebar() {
   const pathname = usePathname();
+  const { cerrarSesion } = useAuth();
 
   return (
     <nav className="space-y-1">
@@ -47,6 +51,15 @@ export function AccountSidebar() {
           </Link>
         );
       })}
+      <Button
+        type="button"
+        variant="ghost"
+        className="mt-4 w-full justify-start gap-3 rounded-xl px-3 py-2.5 text-sm text-zinc-600 hover:text-red-700 dark:text-zinc-400 dark:hover:text-red-400"
+        onClick={cerrarSesion}
+      >
+        <LogOut className="size-4 shrink-0 opacity-80" />
+        Cerrar sesión
+      </Button>
     </nav>
   );
 }
