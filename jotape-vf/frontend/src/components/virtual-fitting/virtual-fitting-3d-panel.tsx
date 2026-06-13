@@ -12,7 +12,7 @@ import {
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { ViewerParticles } from "@/components/try-on/try-on-ui";
 import { SizeComparator } from "@/components/virtual-fitting/size-comparator";
@@ -20,17 +20,24 @@ import { Button } from "@/components/ui/button";
 import { formatMoney } from "@/lib/format";
 import { getFittableProducts } from "@/lib/virtual-fitting/fittable-products";
 import { SIZES, type Size } from "@/lib/sizing/recommender";
+import { useAvatarCalibration } from "@/hooks/use-avatar-calibration";
+import { normalizeAvatarMeasurements } from "@/lib/body-scan/normalize-avatar-measurements";
+import { logMeasurementPipelineDebug } from "@/lib/body-scan/resolve-display-measurements";
+import { loadFittingScene, preloadFittingScene } from "@/lib/virtual-fitting/load-fitting-scene";
+import { mannequinScaleForHeight } from "@/lib/virtual-fitting/size-3d";
 import type { AvatarGender } from "@/types/virtual-fitting";
 import { cn } from "@/lib/utils";
 
 const FittingScene = dynamic(
-  () =>
-    import("@/components/virtual-fitting/3d/fitting-scene").then((m) => m.FittingScene),
+  () => loadFittingScene().then((Component) => ({ default: Component })),
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-full min-h-[480px] w-full items-center justify-center bg-gradient-to-br from-violet-100/80 via-zinc-100 to-sky-100/70 text-sm text-zinc-600">
-        Cargando avatar 3D…
+      <div className="flex h-full min-h-[480px] w-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-violet-100/80 via-zinc-100 to-sky-100/70 text-sm text-zinc-600">
+        <p>Cargando avatar 3D…</p>
+        <p className="text-xs text-zinc-500">
+          Primera carga ~36 MB; puede tardar 1–3 min. No cierres la pestaña.
+        </p>
       </div>
     ),
   },
@@ -42,13 +49,62 @@ type Props = {
 };
 
 export function VirtualFitting3DPanel({
-  referenceHeightCm = 170,
-  estimatedChestCm = 99,
+  referenceHeightCm: referenceHeightProp = 170,
+  estimatedChestCm: estimatedChestProp = 99,
 }: Props) {
+  const { calibration, hydrated } = useAvatarCalibration();
   const products = useMemo(() => getFittableProducts(), []);
   const [activeSlug, setActiveSlug] = useState(products[0]?.slug ?? "");
   const [selectedSize, setSelectedSize] = useState<Size>("M");
   const [avatarGender, setAvatarGender] = useState<AvatarGender>("male");
+
+  const normalized = useMemo(
+    () =>
+      calibration
+        ? normalizeAvatarMeasurements({
+            heightCm: calibration.heightCm,
+            chestCm: calibration.chestCm,
+            waistCm: calibration.waistCm,
+            hipWidthCm: calibration.hipWidthCm,
+            shoulderWidthCm: calibration.shoulderWidthCm,
+            depthCm: calibration.depthCm,
+            armLengthCm: calibration.armLengthCm,
+            legLengthCm: calibration.legLengthCm,
+          })
+        : null,
+    [calibration],
+  );
+
+  const referenceHeightCm = normalized?.heightCm ?? referenceHeightProp;
+  const estimatedChestCm = normalized?.chestCm ?? estimatedChestProp;
+  const zoneScales = calibration?.zoneScales;
+  const heightScale =
+    normalized?.heightScale ?? mannequinScaleForHeight(referenceHeightCm);
+  const widthScale = normalized?.widthScale ?? calibration?.widthScale ?? 1;
+  const depthScale = normalized?.depthScale ?? calibration?.depthScale ?? 1;
+
+  useEffect(() => {
+    preloadFittingScene();
+  }, []);
+
+  useEffect(() => {
+    if (hydrated && calibration?.gender) {
+      setAvatarGender(calibration.gender);
+    }
+  }, [hydrated, calibration?.gender]);
+
+  useEffect(() => {
+    if (!calibration || !normalized) return;
+    logMeasurementPipelineDebug({
+      fused: null,
+      raw: calibration,
+      human: normalized,
+      technical: null,
+    });
+  }, [calibration, normalized]);
+
+  const showHeightDebug =
+    process.env.NEXT_PUBLIC_AVATAR_CALIBRATION_DEBUG === "true";
 
   const product = products.find((p) => p.slug === activeSlug) ?? products[0];
 
@@ -66,10 +122,21 @@ export function VirtualFitting3DPanel({
             className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_70%_at_50%_55%,rgba(196,181,253,0.25)_0%,rgba(147,197,253,0.12)_45%,transparent_72%)]"
             aria-hidden
           />
+          {calibration && normalized && (
+            <div className="pointer-events-none absolute bottom-4 left-4 z-10 rounded-2xl border border-emerald-200/70 bg-emerald-50/90 px-3 py-2 text-[10px] font-medium text-emerald-900 shadow-lg backdrop-blur dark:border-emerald-900/50 dark:bg-emerald-950/80 dark:text-emerald-100">
+              Avatar calibrado · {normalized.heightCm} cm · pecho{" "}
+              {normalized.chestCm} · cintura {normalized.waistCm} · brazo{" "}
+              {normalized.armCm} · pierna {normalized.legCm}
+            </div>
+          )}
           <FittingScene
             size={selectedSize}
             gender={avatarGender}
             heightCm={referenceHeightCm}
+            heightScale={heightScale}
+            zoneScales={zoneScales}
+            avatarCalibration={calibration ?? undefined}
+            showHeightDebug={showHeightDebug}
             className="absolute inset-0 h-full w-full"
           />
           <ViewerParticles />

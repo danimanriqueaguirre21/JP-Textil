@@ -42,8 +42,8 @@ export function AvatarCameraFit({ root, gender, heightScale }: Props) {
 
     if (controls) {
       controls.target.set(0, frame.centerY, 0);
-      controls.minDistance = frame.distance * 0.88;
-      controls.maxDistance = frame.distance * 1.18;
+      controls.minDistance = 3.6;
+      controls.maxDistance = 5.4;
       controls.update();
     }
   }, [root, gender, heightScale, camera, size.width, size.height, controls]);

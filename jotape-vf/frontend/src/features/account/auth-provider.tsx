@@ -81,3 +81,8 @@ export function useAuth(): AuthContextValue {
   }
   return ctx;
 }
+
+/** Fuera de `/account` devuelve `null` (p. ej. Try-On Lab público). */
+export function useOptionalAuth(): AuthContextValue | null {
+  return useContext(AuthContext);
+}

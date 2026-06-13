@@ -1,6 +1,26 @@
-import { Box3, Mesh, Object3D, SkinnedMesh, Vector3 } from "three";
+import {
+  Box3,
+  BufferAttribute,
+  Float32BufferAttribute,
+  Mesh,
+  Object3D,
+  SkinnedMesh,
+  Vector3,
+} from "three";
+
+import {
+  clearMeshMorphTargets,
+  sanitizeMeshMorphTargets,
+  sanitizeMorphTargets,
+} from "@/lib/virtual-fitting/mesh-morph-utils";
+import { BODY_MORPH_TARGET_NAMES } from "@/types/body-morph";
+
+export { sanitizeMorphTargets } from "@/lib/virtual-fitting/mesh-morph-utils";
 
 const _point = new Vector3();
+
+const VF_MORPH_NAMES = new Set(Object.values(BODY_MORPH_TARGET_NAMES));
+const VF_MORPH_RE = /^vf_/i;
 
 /** Avatar Character Creator exportado desde Blender (CC_Base_*). */
 export function isCharacterCreatorScene(scene: Object3D): boolean {
@@ -16,22 +36,91 @@ export function isCharacterCreatorScene(scene: Object3D): boolean {
  */
 export function stripMorphTargets(root: Object3D): void {
   root.traverse((node) => {
-    if (!(node instanceof Mesh)) return;
-    node.morphTargetDictionary = {};
-    node.morphTargetInfluences = [];
-    node.geometry.morphAttributes = {};
-    if ("morphTargetsRelative" in node.geometry) {
-      node.geometry.morphTargetsRelative = false;
-    }
+    if (node instanceof Mesh) clearMeshMorphTargets(node);
   });
+}
+
+/**
+ * En avatares CC conserva solo morphs `vf_*` corporales; elimina expresiones faciales.
+ */
+export function pruneCcMorphTargetsKeepingBody(root: Object3D): void {
+  root.traverse((node) => {
+    if (!(node instanceof Mesh)) return;
+    pruneMeshMorphTargets(node);
+  });
+}
+
+function pruneMeshMorphTargets(mesh: Mesh): void {
+  const morphCount = mesh.geometry.morphAttributes?.position?.length ?? 0;
+  const dict = mesh.morphTargetDictionary;
+  const influences = mesh.morphTargetInfluences;
+
+  if (
+    morphCount > 0 &&
+    (!influences || influences.length !== morphCount)
+  ) {
+    clearMeshMorphTargets(mesh);
+    return;
+  }
+
+  if (!dict || !Object.keys(dict).length) {
+    if (morphCount > 0) clearMeshMorphTargets(mesh);
+    else sanitizeMeshMorphTargets(mesh);
+    return;
+  }
+
+  const entries = Object.entries(dict).filter(
+    ([name]) => VF_MORPH_RE.test(name) || VF_MORPH_NAMES.has(name),
+  );
+
+  if (entries.length > 0) {
+    const oldPositions = mesh.geometry.morphAttributes.position ?? [];
+    const newPositions: BufferAttribute[] = [];
+    const newDict: Record<string, number> = {};
+    entries.forEach(([name, idx]) => {
+      const raw = oldPositions[idx];
+      if (raw instanceof BufferAttribute) {
+        newDict[name] = newPositions.length;
+        newPositions.push(raw);
+      } else if (raw instanceof Float32Array) {
+        newDict[name] = newPositions.length;
+        newPositions.push(new Float32BufferAttribute(raw, 3));
+      }
+    });
+    mesh.geometry.morphAttributes.position = newPositions;
+    mesh.morphTargetDictionary = newDict;
+    mesh.morphTargetInfluences = new Array(newPositions.length).fill(0);
+    sanitizeMeshMorphTargets(mesh);
+    return;
+  }
+
+  if (Object.keys(dict).length > 12) {
+    clearMeshMorphTargets(mesh);
+  } else {
+    sanitizeMeshMorphTargets(mesh);
+  }
+}
+
+function safeComputeBoundingSphere(mesh: SkinnedMesh): void {
+  const morphs = mesh.geometry.morphAttributes.position;
+  if (
+    morphs?.length &&
+    morphs.some((attr) => !(attr instanceof BufferAttribute))
+  ) {
+    return;
+  }
+  try {
+    mesh.geometry.computeBoundingSphere();
+  } catch {
+    /* morphs mal formados: el rig usa caja por huesos */
+  }
 }
 
 export function updateSkinnedMeshes(root: Object3D): void {
   root.traverse((node) => {
-    if (node instanceof SkinnedMesh) {
-      node.skeleton?.update();
-      node.computeBoundingSphere();
-    }
+    if (!(node instanceof SkinnedMesh)) return;
+    node.skeleton?.update();
+    safeComputeBoundingSphere(node);
   });
 }
 

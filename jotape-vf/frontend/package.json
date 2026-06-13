@@ -3,8 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --webpack",
-    "dev:clean": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true})\" && next dev --webpack",
+    "dev": "next dev",
+    "dev:webpack": "node --max-old-space-size=6144 ./node_modules/next/dist/bin/next dev --webpack",
+    "dev:clean": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true})\" && next dev",
+    "dev:clean:webpack": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true})\" && npm run dev:webpack",
     "dev:turbo": "next dev",
     "build": "next build",
     "start": "next start",
@@ -17,6 +19,7 @@
   "dependencies": {
     "@mediapipe/camera_utils": "^0.3.1675466862",
     "@mediapipe/pose": "^0.5.1675469404",
+    "@mediapipe/selfie_segmentation": "^0.1.1675465747",
     "@radix-ui/react-slot": "^1.2.4",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",

@@ -75,9 +75,14 @@ Detalle de pruebas: [`docs/06-testing/plan-pruebas.md`](../06-testing/plan-prueb
 |------------|--------|
 | Landmarks y medidas (lógica + tests unitarios) | ✅ |
 | Probador 2D con cámara (MediaPipe en cliente) | ✅ |
+| **Escaneo corporal fase 1** — captura guiada frontal/lateral | ✅ |
+| **Escaneo corporal fase 2** — MediaPipe sobre fotos estáticas | ✅ |
+| Escaneo corporal fase 3 — avatar 3D + API persistencia | ✅ |
 | E2E del flujo con cámara | ⬜ |
 
 **Tecnologías:** MediaPipe, OpenCV.
+
+**Documentación:** [`docs/04-ui-ux/escaneo-corporal/`](../04-ui-ux/escaneo-corporal/README.md)
 
 ---
 
@@ -88,7 +93,8 @@ Detalle de pruebas: [`docs/06-testing/plan-pruebas.md`](../06-testing/plan-prueb
 | Entregable | Estado |
 |------------|--------|
 | Avatar 3D (GLB hombre / mujer) + prenda adaptada | ✅ |
-| Panel `/try-on` (3D + recomendador + sala 2D) | ✅ |
+| Panel `/try-on` (3D + recomendador + sala 2D + enlace escaneo) | ✅ |
+| Flujo `/try-on/body-scan` y `/account/measurements/scan` | ✅ |
 | E2E Cypress en `/try-on` (género, talla, canvas) | ✅ |
 | Segmentación / overlay foto real de alta fidelidad | ⬜ |
 

@@ -38,14 +38,16 @@ export function calculateBodyMeasurements(
 
   const shoulderMidY = (ls.y + rs.y) / 2;
   const hipMidY = (lh.y + rh.y) / 2;
-  const waistNorm =
-    (shoulderWidthNorm * 0.45 + hipWidthNorm * 0.55) *
-    Math.max(0.35, hipMidY - shoulderMidY);
+  const torsoNorm = Math.max(0.12, hipMidY - shoulderMidY);
+
+  /** Ancho frontal en cintura ≈ interpolación hombro→cadera (NO multiplicar ancho×altura). */
+  const waistWidthNorm =
+    shoulderWidthNorm * 0.55 + hipWidthNorm * 0.82 + torsoNorm * 0.08;
 
   return {
     shoulderWidthCm: Math.round(shoulderWidthNorm * scale),
     hipWidthCm: Math.round(hipWidthNorm * scale),
-    waistEstimateCm: Math.round(waistNorm * scale),
+    waistEstimateCm: Math.round(waistWidthNorm * scale),
     heightEstimateCm: Math.round(bodyHeightNorm * scale),
     poseQuality: Math.min(1, visibilityScore(landmarks)),
   };

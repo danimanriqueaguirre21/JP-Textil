@@ -2,7 +2,9 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+import { useAvatarCalibration } from "@/hooks/use-avatar-calibration";
 
 import {
   BodySilhouetteVisual,
@@ -40,8 +42,15 @@ const pillBtn = (active: boolean) =>
   );
 
 export function SizeRecommender() {
+  const { calibration, hydrated } = useAvatarCalibration();
   const [heightCm, setHeightCm] = useState("170");
   const [weightKg, setWeightKg] = useState("65");
+
+  useEffect(() => {
+    if (!hydrated || !calibration) return;
+    setHeightCm(String(calibration.heightCm));
+    setWeightKg(String(calibration.weightKg));
+  }, [hydrated, calibration]);
   const [fit, setFit] = useState<Fit>("regular");
   const [gender, setGender] = useState<Gender>("unisex");
   const [result, setResult] = useState<SizeResult | null>(null);

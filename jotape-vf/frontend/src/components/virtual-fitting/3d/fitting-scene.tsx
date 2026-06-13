@@ -2,9 +2,11 @@
 
 import { Html, OrbitControls } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Suspense, useLayoutEffect, useRef, type ReactNode } from "react";
+import { Suspense, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import type { Group } from "three";
 
+import { AvatarModelErrorBoundary } from "@/components/virtual-fitting/3d/avatar-model-error-boundary";
+import { AvatarHeightDebug } from "@/components/virtual-fitting/3d/avatar-height-debug";
 import { AvatarView } from "@/components/virtual-fitting/3d/avatar-view";
 import { FITTING_VIEW } from "@/components/virtual-fitting/3d/avatar-camera-fit";
 import { FittingLights } from "@/components/virtual-fitting/3d/gltf-avatar";
@@ -13,6 +15,7 @@ import {
   garmentScaleForSize,
   mannequinScaleForHeight,
 } from "@/lib/virtual-fitting/size-3d";
+import type { AvatarCalibration } from "@/types/avatar-calibration";
 import type { AvatarGender } from "@/types/virtual-fitting";
 
 function SceneRendererSetup() {
@@ -94,17 +97,43 @@ type Props = {
   gender: AvatarGender;
   size?: Size;
   heightCm?: number;
+  heightScale?: number;
+  widthScale?: number;
+  depthScale?: number;
+  zoneScales?: import("@/types/avatar-calibration").AvatarZoneScales;
+  avatarCalibration?: AvatarCalibration;
   className?: string;
+  showHeightDebug?: boolean;
 };
 
-export function FittingScene({
+export function FittingScene(props: Props) {
+  const [sceneKey, setSceneKey] = useState(0);
+
+  return (
+    <AvatarModelErrorBoundary onRetry={() => setSceneKey((k) => k + 1)}>
+      <FittingSceneCanvas key={sceneKey} {...props} />
+    </AvatarModelErrorBoundary>
+  );
+}
+
+function FittingSceneCanvas({
   gender,
   size = "M",
   heightCm = 170,
+  heightScale: heightScaleProp,
+  widthScale = 1,
+  depthScale = 1,
+  zoneScales,
+  avatarCalibration,
   className,
+  showHeightDebug = false,
 }: Props) {
-  const heightScale = mannequinScaleForHeight(heightCm);
+  const heightScale = heightScaleProp ?? mannequinScaleForHeight(heightCm);
+  const proportionsScale = zoneScales
+    ? undefined
+    : { x: widthScale, z: depthScale };
   const garmentScale = garmentScaleForSize(size);
+  const lookAtY = 0.52 + 0.42 * heightScale;
 
   return (
     <div
@@ -114,7 +143,12 @@ export function FittingScene({
       }
     >
       <Canvas
-        camera={{ fov: FITTING_VIEW.fov, position: [0, 0.93, 4.1], near: 0.1, far: 50 }}
+        camera={{
+          fov: FITTING_VIEW.fov,
+          position: [0, lookAtY, 4.15],
+          near: 0.1,
+          far: 50,
+        }}
         gl={{ antialias: true, alpha: true }}
         onCreated={({ gl, scene }) => {
           scene.background = null;
@@ -134,16 +168,28 @@ export function FittingScene({
             <AvatarView
               gender={gender}
               heightScale={heightScale}
+              widthScale={widthScale}
+              depthScale={depthScale}
+              zoneScales={zoneScales}
+              avatarCalibration={avatarCalibration}
+              proportionsScale={proportionsScale}
               garmentScale={garmentScale}
             />
           </AvatarIdleWrapper>
         </Suspense>
         <FittingPlatform />
+        {showHeightDebug && (
+          <AvatarHeightDebug
+            gender={gender}
+            heightCm={heightCm}
+            heightScale={heightScale}
+          />
+        )}
         <OrbitControls
           enablePan={false}
-          minDistance={3.5}
-          maxDistance={5.2}
-          target={[0, 0.93, 0]}
+          minDistance={3.6}
+          maxDistance={5.4}
+          target={[0, lookAtY, 0]}
           maxPolarAngle={Math.PI / 2 + 0.15}
           autoRotate
           autoRotateSpeed={0.35}

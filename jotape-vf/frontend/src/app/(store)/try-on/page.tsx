@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { ScanLine } from "lucide-react";
 
 import { SizeRecommender } from "@/components/try-on/size-recommender";
-import { TryOnSectionLabel } from "@/components/try-on/try-on-ui";
+import { GlassPanel, TryOnSectionLabel } from "@/components/try-on/try-on-ui";
+import { Button } from "@/components/ui/button";
 import { VirtualFitting3DPanel } from "@/components/virtual-fitting/virtual-fitting-3d-panel";
-import { VirtualFittingRoom } from "@/components/virtual-fitting/virtual-fitting-room";
+import { VirtualFittingRoomLazy } from "@/components/virtual-fitting/virtual-fitting-room-lazy";
 
 export const metadata: Metadata = {
   title: "Probador IA",
@@ -37,7 +40,7 @@ export default function TryOnPage() {
           </p>
         </header>
 
-        <section className="space-y-5">
+        <section id="avatar" className="space-y-5 scroll-mt-24">
           <TryOnSectionLabel index="01" title="Avatar 3D + prenda" />
           <VirtualFitting3DPanel />
         </section>
@@ -49,7 +52,28 @@ export default function TryOnPage() {
 
         <section className="space-y-5">
           <TryOnSectionLabel index="03" title="Cámara y calce 2D" />
-          <VirtualFittingRoom />
+          <VirtualFittingRoomLazy />
+        </section>
+
+        <section className="space-y-5">
+          <TryOnSectionLabel index="04" title="Escaneo corporal" />
+          <GlassPanel className="flex flex-col items-start justify-between gap-4 p-6 sm:flex-row sm:items-center">
+            <div className="max-w-xl space-y-2">
+              <p className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
+                Captura guiada frontal y lateral
+              </p>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                Captura frontal y lateral con análisis MediaPipe Pose y medidas
+                estimadas. Avatar 3D en fase 3.
+              </p>
+            </div>
+            <Button asChild className="shrink-0 rounded-full">
+              <Link href="/try-on/body-scan">
+                <ScanLine className="size-4" />
+                Abrir escáner
+              </Link>
+            </Button>
+          </GlassPanel>
         </section>
       </div>
     </main>

@@ -48,6 +48,28 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: turbopackRoot,
   },
+  /** Reduce RAM en compilaciones webpack (Next 15+). */
+  experimental: {
+    webpackMemoryOptimizations: true,
+  },
+  webpack: (config, { dev, isServer }) => {
+    if (dev) {
+      // Menos workers = menos picos de RAM (evita OOM de SWC/webpack en Windows).
+      config.parallelism = 1;
+      if (!isServer) {
+        config.output = {
+          ...config.output,
+          chunkLoadTimeout: 600_000,
+        };
+        config.devtool = "cheap-module-source-map";
+      }
+      config.watchOptions = {
+        ...config.watchOptions,
+        ignored: ["**/node_modules/**", "**/public/models/**"],
+      };
+    }
+    return config;
+  },
   async headers() {
     // En desarrollo, sin CSP: evita bloquear HMR (WebSocket) y facilita depuración.
     if (isDev) return [];

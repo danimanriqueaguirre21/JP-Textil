@@ -7,6 +7,10 @@ type Props = {
   measurements: BodyMeasurements | null;
 };
 
+/**
+ * Vista en vivo (MediaPipe). Valores en cm son estimaciones por frame;
+ * para escaneo corporal usar HumanMeasurementsPanel (medidas normalizadas).
+ */
 export function BodyMeasurementsPanel({ measurements }: Props) {
   if (!measurements) {
     return (

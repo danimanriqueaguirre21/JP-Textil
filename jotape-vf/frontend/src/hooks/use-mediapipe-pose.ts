@@ -25,22 +25,20 @@ export function useMediaPipePose(enabled: boolean) {
 
     async function init() {
       try {
-        const [{ Pose }, { Camera }] = await Promise.all([
-          import("@mediapipe/pose"),
+        const [{ createMediaPipePose }, { Camera }] = await Promise.all([
+          import("@/lib/body-scan/load-mediapipe-pose"),
           import("@mediapipe/camera_utils"),
         ]);
 
         if (cancelled) return;
 
-        const pose = new Pose({
-          locateFile: (file) =>
-            `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`,
-        });
+        const pose = await createMediaPipePose();
 
         pose.setOptions({
           modelComplexity: 1,
           smoothLandmarks: true,
           enableSegmentation: false,
+          staticImageMode: false,
           minDetectionConfidence: 0.5,
           minTrackingConfidence: 0.5,
         });

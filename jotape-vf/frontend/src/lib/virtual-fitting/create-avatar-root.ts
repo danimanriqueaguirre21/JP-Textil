@@ -12,7 +12,8 @@ import {
 } from "@/lib/virtual-fitting/avatar-materials";
 import {
   isCharacterCreatorScene,
-  stripMorphTargets,
+  pruneCcMorphTargetsKeepingBody,
+  sanitizeMorphTargets,
 } from "@/lib/virtual-fitting/avatar-scene-utils";
 import { findMainBodyMesh } from "@/lib/virtual-fitting/body-mesh";
 import { refineAvatarRoot } from "@/lib/virtual-fitting/refine-avatar-mesh";
@@ -36,8 +37,9 @@ export function createAvatarRoot(
   const isCC = isCharacterCreatorScene(clone);
 
   if (isCC) {
-    stripMorphTargets(clone);
+    pruneCcMorphTargetsKeepingBody(clone);
   }
+  sanitizeMorphTargets(clone);
 
   clone.traverse((node) => {
     if (!(node instanceof Mesh)) return;

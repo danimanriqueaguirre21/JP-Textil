@@ -22,9 +22,12 @@ export type AvatarCameraFrame = {
   distance: number;
 };
 
+/** Distancia fija para que 150 cm y 180 cm se distingan visualmente. */
+const FITTING_CAMERA_DISTANCE = 4.15;
+
 /**
- * Cámara tras normalizar (pies en Y=0, altura = targetHeight).
- * Mismo encuadre para ambos géneros.
+ * Cámara tras normalizar (pies en Y=0).
+ * Distancia fija: avatares más bajos se ven más pequeños en pantalla.
  */
 export function computeCanonicalAvatarCameraFrame(
   gender: AvatarGender,
@@ -34,17 +37,12 @@ export function computeCanonicalAvatarCameraFrame(
 ): AvatarCameraFrame {
   const config = getAvatarModelConfig(gender);
   const height = config.targetHeight * heightScale;
-  const frameHeight = height * (1 + FITTING_VIEW.headMarginRatio);
   const centerY =
     height * 0.5 + height * FITTING_VIEW.lookAtYOffsetRatio;
-  const padding = 1 / FITTING_VIEW.verticalFill;
 
-  const vFovRad = (camera.fov * Math.PI) / 180;
-  const distV = (frameHeight * padding) / (2 * Math.tan(vFovRad / 2));
-  const hFovRad = 2 * Math.atan(Math.tan(vFovRad / 2) * viewportAspect);
-  const distH =
-    (FITTING_VIEW.shoulderWidth * padding) / (2 * Math.tan(hFovRad / 2));
-  const distance = Math.max(distV, distH, 3.5);
-
-  return { centerY, height, distance };
+  return {
+    centerY,
+    height,
+    distance: FITTING_CAMERA_DISTANCE,
+  };
 }

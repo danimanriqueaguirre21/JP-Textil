@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { ScanLine } from "lucide-react";
 
+import { BodyProfileForm } from "@/features/body-scan/body-profile-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,24 +20,39 @@ export default function AccountMeasurementsPage() {
           Medidas corporales
         </h1>
         <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-          Zona reservada para visión computacional (MediaPipe / OpenCV) y
-          predicción de talla (PyTorch). RF-07 · RF-08 · RF-09.
+          Captura, MediaPipe Pose y calibración del avatar 3D. Las medidas se
+          pueden guardar en tu cuenta al aplicar el escaneo.
         </p>
       </div>
+
+      <Card className="border-zinc-200 dark:border-zinc-800">
+        <CardHeader>
+          <CardTitle className="text-base">Perfil corporal</CardTitle>
+          <CardDescription>
+            Altura y peso usados para escalar medidas del escaneo y el recomendador.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <BodyProfileForm />
+        </CardContent>
+      </Card>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="border-zinc-200 dark:border-zinc-800">
           <CardHeader className="flex flex-row items-center justify-between gap-2">
             <CardTitle className="text-base">Captura guiada</CardTitle>
-            <Badge>CV</Badge>
+            <Badge className="bg-violet-600 text-white">Fases 1–3</Badge>
           </CardHeader>
           <CardContent className="space-y-3">
             <CardDescription>
-              Flujo de cámara con validación de pose y extracción de landmarks —
-              componente frontend pendiente de API de inferencia.
+              Dos fotos de cuerpo completo (frontal y lateral) con instrucciones
+              visuales. Las imágenes se guardan temporalmente en tu navegador.
             </CardDescription>
-            <Button disabled className="rounded-full" variant="outline">
-              Abrir cámara (próximamente)
+            <Button asChild className="rounded-full">
+              <Link href="/account/measurements/scan">
+                <ScanLine className="size-4" />
+                Iniciar escaneo
+              </Link>
             </Button>
           </CardContent>
         </Card>

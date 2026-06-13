@@ -1,25 +1,32 @@
 import type { AvatarGender } from "@/types/virtual-fitting";
 
+/** Avatar Character Creator con rig (CC_Base_*). ~33–36 MB */
+const AVATAR_GLB_URL: Record<AvatarGender, string> = {
+  male: "/models/avatars/male.glb",
+  female: "/models/avatars/female.glb",
+};
+
+function resolveAvatarUrl(gender: AvatarGender): string {
+  const envKey =
+    gender === "male"
+      ? process.env.NEXT_PUBLIC_AVATAR_MALE_GLB_URL
+      : process.env.NEXT_PUBLIC_AVATAR_FEMALE_GLB_URL;
+  if (envKey) return envKey;
+  return AVATAR_GLB_URL[gender];
+}
+
 /**
- * GLB del avatar. Por defecto basemeshes locales.
- * Ready Player Me: define en .env.local
- *   NEXT_PUBLIC_AVATAR_MALE_GLB_URL=https://models.readyplayer.me/....glb
- *   NEXT_PUBLIC_AVATAR_FEMALE_GLB_URL=https://models.readyplayer.me/....glb
+ * GLB del avatar (Character Creator, skinned mesh + huesos).
+ * Override: NEXT_PUBLIC_AVATAR_MALE_GLB_URL / NEXT_PUBLIC_AVATAR_FEMALE_GLB_URL
  */
 export const AVATAR_MODEL_URL: Record<AvatarGender, string> = {
-  male:
-    process.env.NEXT_PUBLIC_AVATAR_MALE_GLB_URL ??
-    "/models/avatars/male.glb",
-  female:
-    process.env.NEXT_PUBLIC_AVATAR_FEMALE_GLB_URL ??
-    "/models/avatars/female.glb",
+  male: resolveAvatarUrl("male"),
+  female: resolveAvatarUrl("female"),
 };
+
 export type AvatarModelConfig = {
-  /** Rotación inicial (radianes) para alinear el modelo de pie. */
   rotationY: number;
-  /** Altura objetivo en metros tras normalizar. */
   targetHeight: number;
-  /** Desplazamiento fino tras centrar (pies en Y=0). */
   positionOffset: [number, number, number];
 };
 
@@ -38,4 +45,8 @@ export const AVATAR_MODEL_CONFIG: Record<AvatarGender, AvatarModelConfig> = {
 
 export function getAvatarModelConfig(gender: AvatarGender): AvatarModelConfig {
   return AVATAR_MODEL_CONFIG[gender];
+}
+
+export function isCharacterCreatorAvatarUrl(url: string): boolean {
+  return /\/models\/avatars\/(male|female)\.glb$/i.test(url);
 }
